@@ -3,7 +3,8 @@ from app import db
 import bcrypt
 
 
-class user(db.Model):
+class User(db.Model):
+    __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
@@ -32,7 +33,7 @@ class user(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
-            "name": sself.name,
+            "name": self.name,
             "email": self.email,
             "business_name": self.business_name,
             "is_active": self.is_active,
