@@ -32,6 +32,8 @@ def create_app(config_name="default"):
     from app.routes.auth import auth_bp
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
+    from app.routes.clients import clients_bp
+    app.register_blueprint(clients_bp, url_prefix="/api/clients")
     @app.route("/api/health")
     def health():
         return {"status": "Wittle is Alive"}, 200
