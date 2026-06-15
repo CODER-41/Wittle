@@ -9,7 +9,7 @@ from flask_jwt_extended import (
 from app import db, limiter
 from app.models.user import User
 
-auth_bp = Blueprint("auth_", __name__)
+auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.route("/register", methods=["POST"])
 @limiter.limit("3 per hour")
