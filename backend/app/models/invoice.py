@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 from app import db
 
 
@@ -21,8 +22,8 @@ class Invoice(db.Model):
     items = db.relationship("InvoiceItem", backref="invoice", lazy=True, cascade="all, delete-orphan")
 
     def calculate_totals(self):
-        self.subtotal = sum(item.amount for item in self.items)
-        self.tax = round(self.subtotal * 0.16, 2)
+        self.subtotal = sum((item.amount for item in self.items), Decimal("0.00"))
+        self.tax = round(self.subtotal * Decimal("0.16"), 2)
         self.total = self.subtotal + self.tax
 
     def to_dict(self):

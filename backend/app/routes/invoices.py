@@ -2,6 +2,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db, limiter
+from decimal import Decimal
 from app.models.invoice import Invoice, InvoiceItem
 from app.models.client import Client
 
@@ -62,7 +63,7 @@ def create_invoice():
         if not description:
             return jsonify({"error": "Each item must have a description"}), 400
 
-        amount = float(quantity) * float(unit_price)
+        amount = Decimal(str(quantity)) * Decimal(str(unit_price))
 
         invoice_item = InvoiceItem(
             invoice_id=invoice.id,
@@ -154,7 +155,7 @@ def update_invoice(invoice_id):
             description = item_data.get("description", "").strip()
             quantity = item_data.get("quantity", 1)
             unit_price = item_data.get("unit_price", 0)
-            amount = float(quantity) * float(unit_price)
+            amount = Decimal(str(quantity)) * Decimal(str(unit_price))
 
             new_item = InvoiceItem(
                 invoice_id=invoice.id,
