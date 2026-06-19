@@ -40,3 +40,28 @@ def verify_transaction(reference):
     )
 
     return response.json()
+
+def initialize_card_transaction(email, amount, reference, callback_url=None):
+    headers = {
+        "Authorization": f"Bearer {Config.PAYSTACK_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "email": email,
+        "amount": int(amount * 100),
+        "currency": "KES",
+        "reference": reference,
+        "channels": ["card"],
+    }
+
+    if callback_url:
+        payload["callback_url"] = callback_url
+
+    response = requests.post(
+        f"{PAYSTACK_BASE_URL}/transaction/initialize",
+        json=payload,
+        headers=headers,
+    )
+
+    return response.json()
