@@ -41,6 +41,7 @@ def initiate_payment():
         amount=float(invoice.total),
         phone=phone,
     )
+    print("PAYSTACK RAW RESPONSE:", result)
 
     if not result.get("status"):
         return jsonify({
