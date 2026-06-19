@@ -40,6 +40,9 @@ def create_app(config_name="default"):
 
     from app.routes.payments import payments_bp
     app.register_blueprint(payments_bp, url_prefix="/api/payments")
+
+    from app.routes.team import team_bp
+    app.register_blueprint(team_bp, url_prefix="/api/team")
     @app.route("/api/health")
     def health():
         return {"status": "Wittle is Alive"}, 200
