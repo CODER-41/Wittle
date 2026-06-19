@@ -6,7 +6,8 @@ from app.models.payment import Payment
 from app.models.invoice import Invoice
 from app.models.user import User
 from app.services.paystack_service import initiate_mpesa_charge, initialize_card_transaction, verify_transaction
-
+from app.services.email_service import send_payment_receipt_email
+from app.models.client import Client
 
 payments_bp = Blueprint("payments", __name__)
 
@@ -116,12 +117,20 @@ def verify_payment(reference):
     data = result.get("data", {})
     paystack_status = data.get("status")
 
+
     if paystack_status == "success" and payment.status != "success":
         payment.status = "success"
         invoice = Invoice.query.get(payment.invoice_id)
         if invoice:
             invoice.status = "paid"
         db.session.commit()
+
+        client = Client.query.get(invoice.client_id)
+        user = User.query.get(current_user_id)
+        if client and client.email:
+            send_payment_receipt_email(payment, invoice, client, user.business_name)
+
+  
     elif paystack_status == "failed" and payment.status != "failed":
         payment.status = "failed"
         db.session.commit()

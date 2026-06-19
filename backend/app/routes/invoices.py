@@ -7,6 +7,7 @@ from app.models.invoice import Invoice, InvoiceItem
 from app.models.client import Client
 from flask import send_file
 from app.services.pdf_service import generate_invoice_pdf
+from app.services.email_service import send_invoice_email
 from app.models.user import User
 
 invoices_bp = Blueprint("invoices", __name__)
@@ -142,7 +143,31 @@ def download_invoice_pdf(invoice_id):
     pdf_path = generate_invoice_pdf(invoice, client, user.business_name)
 
     return send_file(pdf_path, as_attachment=True, download_name=f"{invoice.invoice_number}.pdf")
+@invoices_bp.route("/<int:invoice_id>/send", methods=["POST"])
+@jwt_required()
+@limiter.limit("20 per hour")
+def send_invoice(invoice_id):
+    current_user_id = int(get_jwt_identity())
 
+    invoice = Invoice.query.filter_by(id=invoice_id, user_id=current_user_id).first()
+    if not invoice:
+        return jsonify({"error": "Invoice not found"}), 404
+
+    client = Client.query.get(invoice.client_id)
+    user = User.query.get(current_user_id)
+
+    pdf_path = generate_invoice_pdf(invoice, client, user.business_name)
+
+    success, message = send_invoice_email(invoice, client, pdf_path, user.business_name)
+
+    if not success:
+        return jsonify({"error": message}), 400
+
+    if invoice.status == "draft":
+        invoice.status = "sent"
+        db.session.commit()
+
+    return jsonify({"message": message, "invoice": invoice.to_dict()}), 200
 
 @invoices_bp.route("/<int:invoice_id>", methods=["PUT"])
 @jwt_required()
