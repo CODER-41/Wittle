@@ -8,6 +8,8 @@ from app.models.client import Client
 from flask import send_file
 from app.services.pdf_service import generate_invoice_pdf
 from app.services.email_service import send_invoice_email
+from app.utils.permissions import get_business_user_id
+from app.utils.permissions import require_owner
 from app.models.user import User
 
 invoices_bp = Blueprint("invoices", __name__)
@@ -22,7 +24,7 @@ def generate_invoice_number(user_id):
 @jwt_required()
 @limiter.limit("30 per hour")
 def create_invoice():
-    current_user_id = int(get_jwt_identity())
+    user, current_user_id = get_business_user_id()
     data = request.get_json()
 
     if not data:
@@ -92,7 +94,7 @@ def create_invoice():
 @jwt_required()
 @limiter.limit("60 per minute")
 def get_invoices():
-    current_user_id = int(get_jwt_identity())
+    user, current_user_id = get_business_user_id()
 
     status_filter = request.args.get("status")
     page = request.args.get("page", 1, type=int)
@@ -118,7 +120,7 @@ def get_invoices():
 @invoices_bp.route("/<int:invoice_id>", methods=["GET"])
 @jwt_required()
 def get_invoice(invoice_id):
-    current_user_id = int(get_jwt_identity())
+    user, current_user_id = get_business_user_id()
 
     invoice = Invoice.query.filter_by(id=invoice_id, user_id=current_user_id).first()
     if not invoice:
@@ -131,7 +133,7 @@ def get_invoice(invoice_id):
 @jwt_required()
 @limiter.limit("20 per hour")
 def download_invoice_pdf(invoice_id):
-    current_user_id = int(get_jwt_identity())
+    user, current_user_id = get_business_user_id()
 
     invoice = Invoice.query.filter_by(id=invoice_id, user_id=current_user_id).first()
     if not invoice:
@@ -147,7 +149,7 @@ def download_invoice_pdf(invoice_id):
 @jwt_required()
 @limiter.limit("20 per hour")
 def send_invoice(invoice_id):
-    current_user_id = int(get_jwt_identity())
+    user, current_user_id = get_business_user_id()
 
     invoice = Invoice.query.filter_by(id=invoice_id, user_id=current_user_id).first()
     if not invoice:
@@ -172,7 +174,7 @@ def send_invoice(invoice_id):
 @invoices_bp.route("/<int:invoice_id>", methods=["PUT"])
 @jwt_required()
 def update_invoice(invoice_id):
-    current_user_id = int(get_jwt_identity())
+    user, current_user_id = get_business_user_id()
 
     invoice = Invoice.query.filter_by(id=invoice_id, user_id=current_user_id).first()
     if not invoice:
@@ -226,7 +228,7 @@ def update_invoice(invoice_id):
 @invoices_bp.route("/<int:invoice_id>/status", methods=["PATCH"])
 @jwt_required()
 def update_invoice_status(invoice_id):
-    current_user_id = int(get_jwt_identity())
+    user, current_user_id = get_business_user_id()
 
     invoice = Invoice.query.filter_by(id=invoice_id, user_id=current_user_id).first()
     if not invoice:
@@ -250,8 +252,9 @@ def update_invoice_status(invoice_id):
 
 @invoices_bp.route("/<int:invoice_id>", methods=["DELETE"])
 @jwt_required()
+@require_owner
 def delete_invoice(invoice_id):
-    current_user_id = int(get_jwt_identity())
+    user, current_user_id = get_business_user_id()
 
     invoice = Invoice.query.filter_by(id=invoice_id, user_id=current_user_id).first()
     if not invoice:

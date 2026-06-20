@@ -7,6 +7,7 @@ from app.models.invoice import Invoice
 from app.models.user import User
 from app.services.paystack_service import initiate_mpesa_charge, initialize_card_transaction, verify_transaction
 from app.services.email_service import send_payment_receipt_email
+from app.utils.permissions import get_business_user_id
 from app.models.client import Client
 
 payments_bp = Blueprint("payments", __name__)
@@ -16,7 +17,7 @@ payments_bp = Blueprint("payments", __name__)
 @jwt_required()
 @limiter.limit("10 per hour")
 def initiate_payment():
-    current_user_id = int(get_jwt_identity())
+    user, current_user_id = get_business_user_id()
     data = request.get_json()
 
     if not data:
@@ -107,7 +108,7 @@ def paystack_webhook():
 @payments_bp.route("/mpesa/verify/<reference>", methods=["GET"])
 @jwt_required()
 def verify_payment(reference):
-    current_user_id = int(get_jwt_identity())
+    user, current_user_id = get_business_user_id()
 
     payment = Payment.query.filter_by(reference=reference, user_id=current_user_id).first()
     if not payment:
@@ -141,7 +142,7 @@ def verify_payment(reference):
 @jwt_required()
 @limiter.limit("10 per hour")
 def initiate_card_payment():
-    current_user_id = int(get_jwt_identity())
+    user, current_user_id = get_business_user_id()
     data = request.get_json()
 
     if not data:
@@ -197,7 +198,7 @@ def initiate_card_payment():
 @payments_bp.route("/", methods=["GET"])
 @jwt_required()
 def get_payments():
-    current_user_id = int(get_jwt_identity())
+    user, current_user_id = get_business_user_id()
 
     payments = Payment.query.filter_by(user_id=current_user_id).order_by(Payment.created_at.desc()).all()
 
