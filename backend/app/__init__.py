@@ -7,13 +7,17 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_mail import Mail
 from flask_cors import CORS
-
+from dotenv import load_dotenv
+load_dotenv()
 
 
 db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(
+    key_func=get_remote_address,
+    storage_uri=os.getenv("REDIS_URL", "redis://localhost:6379/0")
+)
 mail = Mail()
 
 def create_app(config_name="default"):

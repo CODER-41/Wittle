@@ -29,12 +29,10 @@ class Config:
     CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/1")
     CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/2")
     PDF_STORAGE_PATH = os.getenv("PDF_STORAGE_PATH", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app", "static", "pdfs"))
-
-
 class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
-
+    RATELIMIT_ENABLED = True
 
 class ProductionConfig(Config):
     DEBUG = False
