@@ -43,6 +43,24 @@ def create_app(config_name="default"):
 
     from app.routes.team import team_bp
     app.register_blueprint(team_bp, url_prefix="/api/team")
+
+    @app.before_request
+    def set_tenant_context():
+        from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
+        from app.models.user import User
+        try:
+            verify_jwt_in_request(optional=True)
+            current_user_id = get_jwt_identity()
+            if current_user_id:
+                user = User.query.get(int(current_user_id))
+                if user:
+                    business_id = user.get_business_owner_id()
+                    db.session.execute(
+                        db.text("SET LOCAL app.current_business_id = :bid"),
+                        {"bid": str(business_id)}
+                    )
+        except Exception:
+            pass
     @app.route("/api/health")
     def health():
         return {"status": "Wittle is Alive"}, 200
