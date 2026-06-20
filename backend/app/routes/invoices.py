@@ -10,6 +10,7 @@ from app.services.pdf_service import generate_invoice_pdf
 from app.services.email_service import send_invoice_email
 from app.utils.permissions import get_business_user_id
 from app.utils.permissions import require_owner
+from app.services.audit_service import log_action
 from app.models.user import User
 
 invoices_bp = Blueprint("invoices", __name__)
@@ -140,11 +141,12 @@ def download_invoice_pdf(invoice_id):
         return jsonify({"error": "Invoice not found"}), 404
 
     client = Client.query.get(invoice.client_id)
-    user = User.query.get(current_user_id)
 
     pdf_path = generate_invoice_pdf(invoice, client, user.business_name)
 
     return send_file(pdf_path, as_attachment=True, download_name=f"{invoice.invoice_number}.pdf")
+
+
 @invoices_bp.route("/<int:invoice_id>/send", methods=["POST"])
 @jwt_required()
 @limiter.limit("20 per hour")
@@ -156,7 +158,6 @@ def send_invoice(invoice_id):
         return jsonify({"error": "Invoice not found"}), 404
 
     client = Client.query.get(invoice.client_id)
-    user = User.query.get(current_user_id)
 
     pdf_path = generate_invoice_pdf(invoice, client, user.business_name)
 
@@ -169,7 +170,17 @@ def send_invoice(invoice_id):
         invoice.status = "sent"
         db.session.commit()
 
+    log_action(
+        business_id=current_user_id,
+        actor=user,
+        action="invoice.sent",
+        entity_type="invoice",
+        entity_id=invoice.id,
+        details=f"Sent invoice {invoice.invoice_number} to {client.email}",
+    )
+
     return jsonify({"message": message, "invoice": invoice.to_dict()}), 200
+
 
 @invoices_bp.route("/<int:invoice_id>", methods=["PUT"])
 @jwt_required()
@@ -259,6 +270,15 @@ def delete_invoice(invoice_id):
     invoice = Invoice.query.filter_by(id=invoice_id, user_id=current_user_id).first()
     if not invoice:
         return jsonify({"error": "Invoice not found"}), 404
+
+    log_action(
+        business_id=current_user_id,
+        actor=user,
+        action="invoice.deleted",
+        entity_type="invoice",
+        entity_id=invoice.id,
+        details=f"Deleted invoice: {invoice.invoice_number}",
+    )
 
     db.session.delete(invoice)
     db.session.commit()

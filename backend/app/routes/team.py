@@ -5,6 +5,7 @@ from app.models.user import User
 from app.models.invite import Invite
 from app.utils.permissions import require_owner, get_business_user_id
 from flask_mail import Message
+from app.models.audit_log import AuditLog
 
 team_bp = Blueprint("team", __name__)
 
@@ -139,3 +140,30 @@ def remove_staff(staff_id):
     db.session.commit()
 
     return jsonify({"message": "Staff member removed"}), 200
+
+
+@team_bp.route("/audit-logs", methods=["GET"])
+@jwt_required()
+@require_owner
+def get_audit_logs():
+    user, business_id = get_business_user_id()
+
+    action_filter = request.args.get("action")
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 20, type=int)
+
+    query = AuditLog.query.filter_by(business_id=business_id)
+
+    if action_filter:
+        query = query.filter(AuditLog.action.ilike(f"%{action_filter}%"))
+
+    logs = query.order_by(AuditLog.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+
+    return jsonify({
+        "logs": [log.to_dict() for log in logs.items],
+        "total": logs.total,
+        "page": logs.page,
+        "pages": logs.pages,
+    }), 200

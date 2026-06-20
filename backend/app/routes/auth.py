@@ -7,9 +7,11 @@ from flask_jwt_extended import (
     get_jwt
 )
 from app import db, limiter
+from app.services.audit_service import log_action
 from app.models.user import User
 
 auth_bp = Blueprint("auth", __name__)
+
 
 @auth_bp.route("/register", methods=["POST"])
 @limiter.limit("3 per hour")
@@ -74,6 +76,14 @@ def login():
 
     access_token = create_access_token(identity=str(user.id))
     refresh_token = create_refresh_token(identity=str(user.id))
+
+    log_action(
+        business_id=user.get_business_owner_id(),
+        actor=user,
+        action="login",
+        entity_type="user",
+        entity_id=user.id,
+    )
 
     return jsonify({
         "message": "Login successful",

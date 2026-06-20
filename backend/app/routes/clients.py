@@ -4,6 +4,7 @@ from app import db, limiter
 from app.models.client import Client
 from app.utils.permissions import get_business_user_id
 from app.utils.permissions import require_owner
+from app.services.audit_service import log_action
 
 clients_bp = Blueprint("clients", __name__)
 
@@ -33,6 +34,14 @@ def create_client():
 
     db.session.add(client)
     db.session.commit()
+    log_action(
+        business_id=current_user_id,
+        actor=user,
+        action="client.created",
+        entity_type="client",
+        entity_id=client.id,
+        details=f"Created client: {client.name}",
+    )
 
     return jsonify({
         "message": "Client created successfully",
@@ -113,6 +122,14 @@ def update_client(client_id):
     client.notes = data.get("notes", client.notes)
 
     db.session.commit()
+    log_action(
+        business_id=current_user_id,
+        actor=user,
+        action="client.updated",
+        entity_type="client",
+        entity_id=client.id,
+        details=f"Updated client: {client.name}",
+    )
 
     return jsonify({
         "message": "Client updated successfully",
@@ -133,6 +150,16 @@ def delete_client(client_id):
 
     if not client:
         return jsonify({"error": "Client not found"}), 404
+    
+
+    log_action(
+        business_id=current_user_id,
+        actor=user,
+        action="client.deleted",
+        entity_type="client",
+        entity_id=client.id,
+        details=f"Deleted client: {client.name}",
+    )
 
     db.session.delete(client)
     db.session.commit()
