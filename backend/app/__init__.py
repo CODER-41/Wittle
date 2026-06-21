@@ -20,9 +20,10 @@ limiter = Limiter(
 )
 mail = Mail()
 
+
 def create_app(config_name="default"):
     app = Flask(__name__)
-    
+
     from app.config import config
     app.config.from_object(config[config_name])
 
@@ -50,25 +51,32 @@ def create_app(config_name="default"):
 
     @app.before_request
     def set_tenant_context():
+        from flask import g
         from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
         from app.models.user import User
+        g.tenant_business_id = None
         try:
             verify_jwt_in_request(optional=True)
             current_user_id = get_jwt_identity()
             if current_user_id:
                 user = User.query.get(int(current_user_id))
                 if user:
-                    business_id = user.get_business_owner_id()
-                    db.session.execute(
-                        db.text("SET LOCAL app.current_business_id = :bid"),
-                        {"bid": str(business_id)}
-                    )
+                    g.tenant_business_id = user.get_business_owner_id()
         except Exception:
-            pass
+            g.tenant_business_id = None
+
+    @app.before_request
+    def apply_tenant_context_to_session():
+        from flask import g
+        business_id = getattr(g, "tenant_business_id", None)
+        if business_id:
+            db.session.execute(
+                db.text("SET app.current_business_id = :bid"),
+                {"bid": str(business_id)}
+            )
+
     @app.route("/api/health")
     def health():
         return {"status": "Wittle is Alive"}, 200
-
-    
 
     return app

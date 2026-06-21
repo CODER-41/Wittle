@@ -11,6 +11,7 @@ from app.services.email_service import send_invoice_email
 from app.utils.permissions import get_business_user_id
 from app.utils.permissions import require_owner
 from app.services.audit_service import log_action
+from app.tasks import send_invoice_email_task
 from app.models.user import User
 
 invoices_bp = Blueprint("invoices", __name__)
@@ -159,12 +160,10 @@ def send_invoice(invoice_id):
 
     client = Client.query.get(invoice.client_id)
 
-    pdf_path = generate_invoice_pdf(invoice, client, user.business_name)
+    if not client.email:
+        return jsonify({"error": "Client has no email address"}), 400
 
-    success, message = send_invoice_email(invoice, client, pdf_path, user.business_name)
-
-    if not success:
-        return jsonify({"error": message}), 400
+    send_invoice_email_task.delay(invoice.id, current_user_id)
 
     if invoice.status == "draft":
         invoice.status = "sent"
@@ -176,10 +175,13 @@ def send_invoice(invoice_id):
         action="invoice.sent",
         entity_type="invoice",
         entity_id=invoice.id,
-        details=f"Sent invoice {invoice.invoice_number} to {client.email}",
+        details=f"Queued invoice {invoice.invoice_number} for sending to {client.email}",
     )
 
-    return jsonify({"message": message, "invoice": invoice.to_dict()}), 200
+    return jsonify({
+        "message": "Invoice is being sent in the background",
+        "invoice": invoice.to_dict()
+    }), 202
 
 
 @invoices_bp.route("/<int:invoice_id>", methods=["PUT"])
