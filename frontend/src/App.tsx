@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import LoginPage from './pages/auth/LoginPage'
 import Layout from './components/Layout'
+import DashboardPage from './pages/dashboard/DashboardPage'
+
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth()
@@ -20,10 +22,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={
         <ProtectedRoute>
-          <div className="p-8">
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-500 mt-1">Coming soon</p>
-          </div>
+          <DashboardPage />
         </ProtectedRoute>
       } />
       <Route path="/clients" element={
