@@ -59,7 +59,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
-          Good morning, {user?.name?.split(' ')[0]} 👋
+          Good morning, {user?.name?.split(' ')[0]} 
         </h1>
         <p className="text-gray-500 mt-1">Here's what's happening with {user?.business_name || 'your business'}</p>
       </div>

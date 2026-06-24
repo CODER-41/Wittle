@@ -4,6 +4,8 @@ import LoginPage from './pages/auth/LoginPage'
 import Layout from './components/Layout'
 import DashboardPage from './pages/dashboard/DashboardPage'
 import ClientsPage from './pages/clients/ClientsPage'
+import InvoicesPage from './pages/invoices/InvoicesPage.tsx'
+import NewInvoicePage from './pages/invoices/NewInvoicePage.tsx'
 
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -31,14 +33,19 @@ export default function App() {
           <ClientsPage />
         </ProtectedRoute>
       } />
+
       <Route path="/invoices" element={
         <ProtectedRoute>
-          <div className="p-8">
-            <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
-            <p className="text-gray-500 mt-1">Coming soon</p>
-          </div>
+          <InvoicesPage />
         </ProtectedRoute>
       } />
+      <Route path="/invoices/new" element={
+        <ProtectedRoute>
+          <NewInvoicePage />
+        </ProtectedRoute>
+      } />
+            
+
       <Route path="/payments" element={
         <ProtectedRoute>
           <div className="p-8">
