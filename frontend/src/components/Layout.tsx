@@ -1,5 +1,5 @@
+import { NavLink } from "react-router-dom"
 import { ReactNode } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
   LayoutDashboard,
@@ -20,7 +20,6 @@ const navItems = [
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth()
-  const navigate = useNavigate()
 
   return (
     <div className="flex h-screen bg-gray-50">
