@@ -6,6 +6,7 @@ import DashboardPage from './pages/dashboard/DashboardPage'
 import ClientsPage from './pages/clients/ClientsPage'
 import InvoicesPage from './pages/invoices/InvoicesPage.tsx'
 import NewInvoicePage from './pages/invoices/NewInvoicePage.tsx'
+import PaymentsPage from './pages/payments/PaymentsPage'
 
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -45,15 +46,13 @@ export default function App() {
         </ProtectedRoute>
       } />
             
-
       <Route path="/payments" element={
         <ProtectedRoute>
-          <div className="p-8">
-            <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
-            <p className="text-gray-500 mt-1">Coming soon</p>
-          </div>
+          <PaymentsPage />
         </ProtectedRoute>
       } />
+
+      
       <Route path="/team" element={
         <ProtectedRoute>
           <div className="p-8">

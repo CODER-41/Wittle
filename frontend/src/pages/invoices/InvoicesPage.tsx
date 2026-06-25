@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/client'
 import { Invoice } from '../../types'
-import { Plus, FileText, Download, Send } from 'lucide-react'
+import { Plus, FileText, Download, Send, CreditCard } from 'lucide-react'
+import PaymentModal from '../../components/PaymentModal'
 
 const statusColors: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-600',
@@ -17,6 +18,7 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('')
   const [sending, setSending] = useState<number | null>(null)
+  const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null)
 
   const fetchInvoices = (status = '') => {
     const query = status ? `?status=${status}` : ''
@@ -134,14 +136,23 @@ export default function InvoicesPage() {
                     <Download size={15} />
                   </button>
                   {invoice.status !== 'paid' && (
-                    <button
-                      onClick={() => handleSend(invoice)}
-                      disabled={sending === invoice.id}
-                      title="Send invoice"
-                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-40"
-                    >
-                      <Send size={15} />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleSend(invoice)}
+                        disabled={sending === invoice.id}
+                        title="Send invoice"
+                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-40"
+                      >
+                        <Send size={15} />
+                      </button>
+                      <button
+                        onClick={() => setPaymentInvoice(invoice)}
+                        title="Collect payment"
+                        className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      >
+                        <CreditCard size={15} />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -149,6 +160,18 @@ export default function InvoicesPage() {
           ))
         )}
       </div>
+
+      {/* Payment modal */}
+      {paymentInvoice && (
+        <PaymentModal
+          invoice={paymentInvoice}
+          onClose={() => setPaymentInvoice(null)}
+          onSuccess={() => {
+            fetchInvoices(statusFilter)
+            setPaymentInvoice(null)
+          }}
+        />
+      )}
     </div>
   )
 }
