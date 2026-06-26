@@ -13,6 +13,8 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     role = db.Column(db.String(20), default="owner")
     owner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    reset_token = db.Column(db.String(100), nullable=True)
+    reset_token_expires = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
