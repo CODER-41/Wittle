@@ -18,7 +18,7 @@ class Invoice(db.Model):
     notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-
+    portal_token = db.Column(db.String(64), unique=True, nullable=True)
     items = db.relationship("InvoiceItem", backref="invoice", lazy=True, cascade="all, delete-orphan")
 
     def calculate_totals(self):

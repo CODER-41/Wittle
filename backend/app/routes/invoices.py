@@ -13,6 +13,7 @@ from app.utils.permissions import require_owner
 from app.services.audit_service import log_action
 from app.tasks import send_invoice_email_task
 from app.models.user import User
+import secrets
 
 invoices_bp = Blueprint("invoices", __name__)
 
@@ -286,3 +287,127 @@ def delete_invoice(invoice_id):
     db.session.commit()
 
     return jsonify({"message": "Invoice deleted successfully"}), 200
+
+
+@invoices_bp.route("/<int:invoice_id>/portal", methods=["POST"])
+@jwt_required()
+def generate_portal_link(invoice_id):
+    user, current_user_id = get_business_user_id()
+
+    invoice = Invoice.query.filter_by(id=invoice_id, user_id=current_user_id).first()
+    if not invoice:
+        return jsonify({"error": "Invoice not found"}), 404
+
+    if not invoice.portal_token:
+        invoice.portal_token = secrets.token_urlsafe(32)
+        db.session.commit()
+
+    return jsonify({
+        "portal_token": invoice.portal_token,
+        "portal_url": f"http://localhost:5173/portal/{invoice.portal_token}"
+    }), 200
+
+
+@invoices_bp.route("/portal/<token>", methods=["GET"])
+def get_portal_invoice(token):
+    db.session.execute(db.text("SET app.current_business_id = '0'"))
+
+    invoice = Invoice.query.filter_by(portal_token=token).first()
+    if not invoice:
+        return jsonify({"error": "Invalid or expired portal link"}), 404
+
+    db.session.execute(
+        db.text("SET app.current_business_id = :bid"),
+        {"bid": str(invoice.user_id)}
+    )
+
+    client = Client.query.get(invoice.client_id)
+    user = User.query.get(invoice.user_id)
+
+    return jsonify({
+        "invoice": invoice.to_dict(),
+        "client": {"name": client.name if client else "Client"},
+        "business": {"name": user.business_name or "Business"}
+    }), 200
+
+@invoices_bp.route("/portal/<token>/pay/mpesa", methods=["POST"])
+def portal_pay_mpesa(token):
+    invoice = Invoice.query.filter_by(portal_token=token).first()
+    if not invoice:
+        return jsonify({"error": "Invalid portal link"}), 404
+
+    if invoice.status == "paid":
+        return jsonify({"error": "Invoice already paid"}), 400
+
+    data = request.get_json()
+    phone = data.get("phone", "").strip()
+    if not phone:
+        return jsonify({"error": "Phone number is required"}), 400
+
+    from app.services.paystack_service import initiate_mpesa_charge
+    result = initiate_mpesa_charge(phone, float(invoice.total), invoice.invoice_number)
+
+    if not result.get("status"):
+        return jsonify({"error": "Failed to initiate payment"}), 400
+
+    from app.models.payment import Payment
+    paystack_data = result.get("data", {})
+    payment = Payment(
+        user_id=invoice.user_id,
+        invoice_id=invoice.id,
+        reference=paystack_data.get("reference", ""),
+        method="mpesa",
+        amount=invoice.total,
+        status="pending",
+        phone=phone,
+        paystack_response=str(paystack_data),
+    )
+    db.session.add(payment)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Payment request sent to your phone",
+        "reference": payment.reference
+    }), 201
+
+
+@invoices_bp.route("/portal/<token>/pay/card", methods=["POST"])
+def portal_pay_card(token):
+    invoice = Invoice.query.filter_by(portal_token=token).first()
+    if not invoice:
+        return jsonify({"error": "Invalid portal link"}), 404
+
+    if invoice.status == "paid":
+        return jsonify({"error": "Invoice already paid"}), 400
+
+    data = request.get_json()
+    email = data.get("email", "").strip()
+    if not email:
+        return jsonify({"error": "Email is required for card payment"}), 400
+
+    from app.services.paystack_service import initialize_card_transaction
+    import uuid
+    reference = f"WTL-PORTAL-{uuid.uuid4().hex[:10]}"
+    result = initialize_card_transaction(email, float(invoice.total), reference)
+
+    if not result.get("status"):
+        return jsonify({"error": "Failed to initialize payment"}), 400
+
+    from app.models.payment import Payment
+    paystack_data = result.get("data", {})
+    payment = Payment(
+        user_id=invoice.user_id,
+        invoice_id=invoice.id,
+        reference=paystack_data.get("reference", reference),
+        method="card",
+        amount=invoice.total,
+        status="pending",
+        paystack_response=str(paystack_data),
+    )
+    db.session.add(payment)
+    db.session.commit()
+
+    return jsonify({
+        "authorization_url": paystack_data.get("authorization_url"),
+        "reference": payment.reference
+    }), 201
