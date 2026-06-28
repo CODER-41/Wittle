@@ -106,7 +106,10 @@ export default function InvoicesPage() {
         ) : (
           invoices.map(invoice => (
             <div key={invoice.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
+              <div
+                className="flex items-center gap-3 cursor-pointer"
+                onClick={() => navigate(`/invoices/${invoice.id}`)}
+              >
                 <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
                   <FileText size={16} className="text-blue-600" />
                 </div>

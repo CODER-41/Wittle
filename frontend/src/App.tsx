@@ -7,7 +7,10 @@ import ClientsPage from './pages/clients/ClientsPage'
 import InvoicesPage from './pages/invoices/InvoicesPage.tsx'
 import NewInvoicePage from './pages/invoices/NewInvoicePage.tsx'
 import PaymentsPage from './pages/payments/PaymentsPage'
-
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
+import ResetPasswordPage from './pages/auth/ResetPasswordPage'
+import InvoiceDetailPage from './pages/invoices/InvoiceDetailPage'
+import PortalPage from './pages/portal/PortalPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth()
@@ -34,7 +37,6 @@ export default function App() {
           <ClientsPage />
         </ProtectedRoute>
       } />
-
       <Route path="/invoices" element={
         <ProtectedRoute>
           <InvoicesPage />
@@ -45,14 +47,16 @@ export default function App() {
           <NewInvoicePage />
         </ProtectedRoute>
       } />
-            
+      <Route path="/invoices/:id" element={
+        <ProtectedRoute>
+          <InvoiceDetailPage />
+        </ProtectedRoute>
+      } />
       <Route path="/payments" element={
         <ProtectedRoute>
           <PaymentsPage />
         </ProtectedRoute>
       } />
-
-      
       <Route path="/team" element={
         <ProtectedRoute>
           <div className="p-8">
@@ -61,7 +65,10 @@ export default function App() {
           </div>
         </ProtectedRoute>
       } />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/portal/:token" element={<PortalPage />} />
     </Routes>
   )
 }
