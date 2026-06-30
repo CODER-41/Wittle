@@ -82,7 +82,7 @@ export default function NewInvoicePage() {
   }
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 sm:p-8 max-w-3xl">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button
@@ -107,7 +107,7 @@ export default function NewInvoicePage() {
         {/* Client + due date */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="font-semibold text-gray-900 mb-4">Invoice Details</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Client *</label>
               <select

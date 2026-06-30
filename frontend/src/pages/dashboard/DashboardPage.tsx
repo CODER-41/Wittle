@@ -55,7 +55,7 @@ export default function DashboardPage() {
   )
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 sm:p-8 max-w-6xl">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
@@ -65,7 +65,8 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-4 mb-8 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 mb-6 lg:grid-cols-4">
+
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-gray-500">Total Revenue</span>

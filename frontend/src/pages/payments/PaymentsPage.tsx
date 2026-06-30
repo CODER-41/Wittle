@@ -15,6 +15,7 @@ const statusColors: Record<string, string> = {
   failed: 'bg-red-100 text-red-700',
 }
 
+
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,7 +32,7 @@ export default function PaymentsPage() {
     .reduce((sum, p) => sum + p.amount, 0)
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-8 max-w-5xl">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
@@ -41,7 +42,7 @@ export default function PaymentsPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <p className="text-sm text-gray-500 mb-1">Total Payments</p>
           <p className="text-2xl font-bold text-gray-900">{payments.length}</p>

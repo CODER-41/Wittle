@@ -53,7 +53,7 @@ export default function InvoicesPage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-8 max-w-5xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -105,7 +105,7 @@ export default function InvoicesPage() {
           </div>
         ) : (
           invoices.map(invoice => (
-            <div key={invoice.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+            <div key={invoice.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 gap-3 hover:bg-gray-50 transition-colors">
               <div
                 className="flex items-center gap-3 cursor-pointer"
                 onClick={() => navigate(`/invoices/${invoice.id}`)}
