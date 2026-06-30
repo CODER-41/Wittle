@@ -12,6 +12,8 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import InvoiceDetailPage from './pages/invoices/InvoiceDetailPage'
 import PortalPage from './pages/portal/PortalPage'
 import VatReportPage from './pages/reports/VatReportPage'
+import SettingsPage from './pages/settings/SettingsPage'
+import TeamPage from './pages/team/TeamPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth()
@@ -58,17 +60,21 @@ export default function App() {
           <PaymentsPage />
         </ProtectedRoute>
       } />
-      <Route path="/team" element={
-        <ProtectedRoute>
-          <div className="p-8">
-            <h1 className="text-2xl font-bold text-gray-900">Team</h1>
-            <p className="text-gray-500 mt-1">Coming soon</p>
-          </div>
-        </ProtectedRoute>
-      } />
+
       <Route path="/vat-report" element={
         <ProtectedRoute>
           <VatReportPage />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <SettingsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/team" element={
+        <ProtectedRoute>
+          <TeamPage />
         </ProtectedRoute>
       } />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
