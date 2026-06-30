@@ -14,6 +14,7 @@ from app.services.audit_service import log_action
 from app.tasks import send_invoice_email_task
 from app.models.user import User
 import secrets
+from sqlalchemy import func, extract
 
 invoices_bp = Blueprint("invoices", __name__)
 
@@ -411,3 +412,45 @@ def portal_pay_card(token):
         "authorization_url": paystack_data.get("authorization_url"),
         "reference": payment.reference
     }), 201
+@invoices_bp.route("/vat-report", methods=["GET"])
+@jwt_required()
+def vat_report():
+    user, current_user_id = get_business_user_id()
+
+    month = request.args.get("month", type=int)
+    year = request.args.get("year", type=int)
+
+    if not month or not year:
+        return jsonify({"error": "month and year query parameters are required"}), 400
+
+    invoices = Invoice.query.filter(
+        Invoice.user_id == current_user_id,
+        Invoice.status == "paid",
+        extract("month", Invoice.created_at) == month,
+        extract("year", Invoice.created_at) == year,
+    ).order_by(Invoice.created_at.asc()).all()
+
+    total_subtotal = sum(float(inv.subtotal) for inv in invoices)
+    total_vat = sum(float(inv.tax) for inv in invoices)
+    total_gross = sum(float(inv.total) for inv in invoices)
+
+    return jsonify({
+        "month": month,
+        "year": year,
+        "business_name": user.business_name,
+        "kra_pin": user.kra_pin,
+        "invoice_count": len(invoices),
+        "total_subtotal": round(total_subtotal, 2),
+        "total_vat_collected": round(total_vat, 2),
+        "total_gross": round(total_gross, 2),
+        "invoices": [
+            {
+                "invoice_number": inv.invoice_number,
+                "date": inv.created_at.strftime("%Y-%m-%d"),
+                "subtotal": float(inv.subtotal),
+                "vat": float(inv.tax),
+                "total": float(inv.total),
+            }
+            for inv in invoices
+        ]
+    }), 200

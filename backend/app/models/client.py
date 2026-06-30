@@ -14,7 +14,7 @@ class Client(db.Model):
     notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-
+    kra_pin = db.Column(db.String(20), nullable=True)
     def to_dict(self):
         return {
             "id": self.id,
@@ -26,6 +26,7 @@ class Client(db.Model):
             "notes": self.notes,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
+            "kra_pin": self.kra_pin,
         }
 
     def __repr__(self):

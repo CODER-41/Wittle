@@ -17,6 +17,7 @@ class User(db.Model):
     reset_token_expires = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    kra_pin = db.Column(db.String(20), nullable=True)
 
 
    
@@ -42,6 +43,7 @@ class User(db.Model):
             "role": self.role,
             "owner_id": self.owner_id,
             "created_at": self.created_at.isoformat(),
+            "kra_pin": self.kra_pin,
         }
 
     def get_business_owner_id(self):
