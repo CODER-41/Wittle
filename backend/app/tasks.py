@@ -51,3 +51,64 @@ def send_payment_receipt_task(payment_id, business_id):
 
         success, message = send_payment_receipt_email(payment, invoice, client, user.business_name)
         return {"success": success, "message": message}
+
+
+
+@celery_app.task(name="app.tasks.process_recurring_invoices")
+def process_recurring_invoices():
+    app = create_app("production")
+    with app.app_context():
+        from datetime import datetime
+        import json
+        from app.models.recurring_invoice import RecurringInvoice
+        from app.models.invoice import Invoice, InvoiceItem
+        from decimal import Decimal
+
+        today = datetime.utcnow().date()
+
+        db.session.execute(db.text("SET app.current_business_id = '0'"))
+
+        due = RecurringInvoice.query.filter(
+            RecurringInvoice.is_active == True,
+            RecurringInvoice.next_run_date <= today,
+        ).all()
+        results = []
+        for recurring in due:
+            set_tenant_context(recurring.user_id)
+
+            count = Invoice.query.filter_by(user_id=recurring.user_id).count() + 1
+            invoice_number = f"WTL-{count:04d}"
+
+            invoice = Invoice(
+                user_id=recurring.user_id,
+                client_id=recurring.client_id,
+                invoice_number=invoice_number,
+                status="draft",
+                notes=recurring.notes,
+            )
+            db.session.add(invoice)
+            db.session.flush()
+
+            items = json.loads(recurring.items_json)
+            for item in items:
+                amount = Decimal(str(item["quantity"])) * Decimal(str(item["unit_price"]))
+                invoice_item = InvoiceItem(
+                    invoice_id=invoice.id,
+                    description=item["description"],
+                    quantity=item["quantity"],
+                    unit_price=item["unit_price"],
+                    amount=amount,
+                )
+                db.session.add(invoice_item)
+
+            db.session.flush()
+            invoice.calculate_totals()
+
+            recurring.last_run_date = today
+            recurring.invoices_generated += 1
+            recurring.advance_next_run()
+
+            db.session.commit()
+            results.append(invoice.invoice_number)
+
+        return {"generated": results, "count": len(results)}

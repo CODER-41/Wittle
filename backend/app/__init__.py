@@ -52,6 +52,9 @@ def create_app(config_name="default"):
     from app.routes.expenses import expenses_bp
     app.register_blueprint(expenses_bp, url_prefix="/api/expenses")
 
+    from app.routes.recurring import recurring_bp
+    app.register_blueprint(recurring_bp, url_prefix="/api/recurring")
+
     @app.before_request
     def set_tenant_context():
         from flask import g

@@ -1,6 +1,7 @@
 import os
 from celery import Celery
 from dotenv import load_dotenv
+from celery.schedules import crontab
 
 load_dotenv()
 
@@ -19,6 +20,12 @@ def make_celery():
         timezone="Africa/Nairobi",
         enable_utc=True,
     )
+    celery.conf.beat_schedule = {
+        "process-recurring-invoices-daily": {
+            "task": "app.tasks.process_recurring_invoices",
+            "schedule": crontab(hour=6, minute=0),  # runs daily at 6 AM
+        },
+    }
     return celery
 
 
