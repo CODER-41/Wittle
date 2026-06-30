@@ -14,6 +14,7 @@ import PortalPage from './pages/portal/PortalPage'
 import VatReportPage from './pages/reports/VatReportPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import TeamPage from './pages/team/TeamPage'
+import ExpensesPage from './pages/expenses/ExpensesPage' 
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth()
@@ -77,6 +78,12 @@ export default function App() {
           <TeamPage />
         </ProtectedRoute>
       } />
+      <Route path="/expenses" element={
+        <ProtectedRoute>
+          <ExpensesPage />
+        </ProtectedRoute>
+      } />
+
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
