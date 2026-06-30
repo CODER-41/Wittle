@@ -49,6 +49,9 @@ def create_app(config_name="default"):
     from app.routes.team import team_bp
     app.register_blueprint(team_bp, url_prefix="/api/team")
 
+    from app.routes.expenses import expenses_bp
+    app.register_blueprint(expenses_bp, url_prefix="/api/expenses")
+
     @app.before_request
     def set_tenant_context():
         from flask import g
