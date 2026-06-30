@@ -18,6 +18,7 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     kra_pin = db.Column(db.String(20), nullable=True)
+    invoice_template = db.Column(db.String(20), default="classic")
 
 
    
@@ -44,6 +45,7 @@ class User(db.Model):
             "owner_id": self.owner_id,
             "created_at": self.created_at.isoformat(),
             "kra_pin": self.kra_pin,
+            "invoice_template": self.invoice_template,
         }
 
     def get_business_owner_id(self):

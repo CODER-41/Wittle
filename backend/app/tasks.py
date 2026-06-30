@@ -29,7 +29,7 @@ def send_invoice_email_task(invoice_id, business_id):
         client = Client.query.get(invoice.client_id)
         user = User.query.get(invoice.user_id)
 
-        pdf_path = generate_invoice_pdf(invoice, client, user.business_name)
+        pdf_path = generate_invoice_pdf(invoice, client, user.business_name, user.invoice_template)
         success, message = send_invoice_email(invoice, client, pdf_path, user.business_name)
 
         return {"success": success, "message": message}

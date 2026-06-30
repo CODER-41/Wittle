@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    @page {
+        size: A4;
+        margin: 2.2cm 2cm;
+    }
+    body {
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        color: #18181b;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+    .top-bar {
+        background-color: #18181b;
+        color: white;
+        padding: 24px 28px;
+        margin: -2.2cm -2cm 30px -2cm;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .top-bar .business-name {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+    }
+    .top-bar .business-tagline {
+        font-size: 9px;
+        color: #a1a1aa;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 2px;
+    }
+    .top-bar .invoice-title {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #d4d4d8;
+    }
+    .top-bar .invoice-number {
+        font-size: 18px;
+        font-weight: 700;
+        margin-top: 2px;
+    }
+    .status-row {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 24px;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 5px 16px;
+        border-radius: 4px;
+        font-size: 9px;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+    }
+    .status-draft { background-color: #f4f4f5; color: #52525b; }
+    .status-sent { background-color: #dbeafe; color: #1d4ed8; }
+    .status-paid { background-color: #dcfce7; color: #15803d; }
+    .status-overdue { background-color: #fee2e2; color: #b91c1c; }
+    .details {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 28px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e4e4e7;
+    }
+    .details-block h4 {
+        margin: 0 0 6px 0;
+        color: #a1a1aa;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-weight: 600;
+    }
+    .details-block p {
+        margin: 2px 0;
+        color: #3f3f46;
+    }
+    .details-block .client-name {
+        font-weight: 700;
+        font-size: 14px;
+        color: #18181b;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 4px;
+    }
+    th {
+        border-bottom: 2px solid #18181b;
+        text-align: left;
+        padding: 8px 6px;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #71717a;
+        font-weight: 700;
+    }
+    th.right, td.right { text-align: right; }
+    td {
+        padding: 12px 6px;
+        border-bottom: 1px solid #f4f4f5;
+        color: #3f3f46;
+    }
+    .totals-wrap {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+    .totals { width: 260px; }
+    .totals table { margin: 0; }
+    .totals td { padding: 7px 0; border: none; }
+    .totals .total-row {
+        border-top: 2px solid #18181b;
+        font-weight: 700;
+        font-size: 16px;
+        color: #18181b;
+        padding-top: 12px;
+    }
+    .payment-info {
+        margin-top: 32px;
+        padding: 18px;
+        background-color: #fafafa;
+        border-radius: 4px;
+    }
+    .payment-info h4 {
+        margin: 0 0 6px 0;
+        color: #18181b;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+    }
+    .payment-info p { margin: 2px 0; color: #52525b; font-size: 11px; }
+    .notes {
+        margin-top: 24px;
+        color: #71717a;
+        font-size: 11px;
+    }
+    .footer {
+        margin-top: 50px;
+        text-align: center;
+        color: #a1a1aa;
+        font-size: 9px;
+        letter-spacing: 0.5px;
+    }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div>
+        <div class="business-name">{{ business_name }}</div>
+        <div class="business-tagline">Powered by Wittle</div>
+    </div>
+    <div style="text-align: right;">
+        <div class="invoice-title">Invoice</div>
+        <div class="invoice-number">{{ invoice.invoice_number }}</div>
+    </div>
+</div>
+
+<div class="status-row">
+    <span class="status-badge status-{{ invoice.status }}">{{ invoice.status }}</span>
+</div>
+
+<div class="details">
+    <div class="details-block">
+        <h4>Billed To</h4>
+        <p class="client-name">{{ client.name }}</p>
+        <p>{{ client.email or "" }}</p>
+        <p>{{ client.phone or "" }}</p>
+    </div>
+    <div class="details-block" style="text-align: right;">
+        <h4>Invoice Date</h4>
+        <p>{{ invoice.created_at.strftime("%d %B %Y") }}</p>
+        <h4 style="margin-top:12px;">Due Date</h4>
+        <p>{{ invoice.due_date.strftime("%d %B %Y") if invoice.due_date else "N/A" }}</p>
+    </div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Description</th>
+            <th class="right">Qty</th>
+            <th class="right">Unit Price</th>
+            <th class="right">Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in invoice.items %}
+        <tr>
+            <td>{{ item.description }}</td>
+            <td class="right">{{ item.quantity }}</td>
+            <td class="right">{{ "{:,.2f}".format(item.unit_price) }}</td>
+            <td class="right">{{ "{:,.2f}".format(item.amount) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="totals-wrap">
+    <div class="totals">
+        <table>
+            <tr><td>Subtotal</td><td class="right">KES {{ "{:,.2f}".format(invoice.subtotal) }}</td></tr>
+            <tr><td>VAT (16%)</td><td class="right">KES {{ "{:,.2f}".format(invoice.tax) }}</td></tr>
+            <tr class="total-row"><td>Total</td><td class="right">KES {{ "{:,.2f}".format(invoice.total) }}</td></tr>
+        </table>
+    </div>
+</div>
+
+{% if invoice.status != "paid" %}
+<div class="payment-info">
+    <h4>How to Pay</h4>
+    <p>M-Pesa or Card payment links are available via the invoice email or client portal.</p>
+</div>
+{% endif %}
+
+{% if invoice.notes %}
+<div class="notes"><strong>Notes:</strong> {{ invoice.notes }}</div>
+{% endif %}
+
+<div class="footer">Generated by Wittle — Invoicing &amp; Payments for Kenyan Businesses</div>
+
+</body>
+</html>

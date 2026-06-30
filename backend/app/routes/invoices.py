@@ -145,7 +145,7 @@ def download_invoice_pdf(invoice_id):
 
     client = Client.query.get(invoice.client_id)
 
-    pdf_path = generate_invoice_pdf(invoice, client, user.business_name)
+    pdf_path = generate_invoice_pdf(invoice, client, user.business_name, user.invoice_template)
 
     return send_file(pdf_path, as_attachment=True, download_name=f"{invoice.invoice_number}.pdf")
 

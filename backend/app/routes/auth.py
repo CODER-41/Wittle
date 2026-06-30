@@ -193,3 +193,22 @@ def reset_password():
     db.session.commit()
 
     return jsonify({"message": "Password reset successfully. You can now log in"}), 200
+
+@auth_bp.route("/me/template", methods=["PATCH"])
+@jwt_required()
+def update_invoice_template():
+    current_user_id = get_jwt_identity()
+    user = User.query.get(int(current_user_id))
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    data = request.get_json()
+    template = data.get("invoice_template", "")
+
+    if template not in ["classic", "modern", "minimal"]:
+        return jsonify({"error": "Invalid template. Must be classic, modern, or minimal"}), 400
+
+    user.invoice_template = template
+    db.session.commit()
+
+    return jsonify({"message": "Template updated", "user": user.to_dict()}), 200
