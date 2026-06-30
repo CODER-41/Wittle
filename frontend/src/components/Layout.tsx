@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   X,
+  Receipt
 } from 'lucide-react'
 
 const navItems = [
@@ -18,6 +19,7 @@ const navItems = [
   { to: '/invoices', icon: FileText, label: 'Invoices' },
   { to: '/payments', icon: CreditCard, label: 'Payments' },
   { to: '/team', icon: Settings, label: 'Team' },
+  { to: '/vat-report', icon: Receipt, label: 'VAT Report' },
 ]
 
 export default function Layout({ children }: { children: ReactNode }) {
