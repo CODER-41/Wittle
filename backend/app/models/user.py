@@ -19,6 +19,13 @@ class User(db.Model):
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     kra_pin = db.Column(db.String(20), nullable=True)
     invoice_template = db.Column(db.String(20), default="classic")
+    plan = db.Column(db.String(20), default="free")  # free, pro
+    plan_status = db.Column(db.String(20), default="active")  # active, cancelled, expired
+    paystack_customer_code = db.Column(db.String(100), nullable=True)
+    paystack_subscription_code = db.Column(db.String(100), nullable=True)
+    plan_expires_at = db.Column(db.DateTime, nullable=True)
+    invoice_count_this_month = db.Column(db.Integer, default=0)
+    invoice_count_reset_date = db.Column(db.DateTime, nullable=True)
 
 
    
@@ -46,12 +53,28 @@ class User(db.Model):
             "created_at": self.created_at.isoformat(),
             "kra_pin": self.kra_pin,
             "invoice_template": self.invoice_template,
-        }
+            "plan": self.plan,
+            "plan_status": self.plan_status,
+            "plan_expires_at": self.plan_expires_at.isoformat() if self.plan_expires_at else None,
+                    }
 
     def get_business_owner_id(self):
         """Returns the user_id whose data this account operates on —
         their own id if they're an owner, or their owner's id if staff."""
         return self.owner_id if self.role == "staff" else self.id
     
+    def can_create_invoice(self):
+        from datetime import datetime, timezone
+        if self.plan == "pro":
+            return True, None
+        # Reset monthly counter if needed
+        now = datetime.now(timezone.utc)
+        if not self.invoice_count_reset_date or now.month != self.invoice_count_reset_date.month:
+            self.invoice_count_this_month = 0
+            self.invoice_count_reset_date = now
+        if self.invoice_count_this_month >= 5:
+            return False, "Free plan limit reached. Upgrade to Pro for unlimited invoices."
+        return True, None
+        
     def __repr__(self):
         return f"<User {self.name}>"

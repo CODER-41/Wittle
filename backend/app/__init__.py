@@ -55,6 +55,9 @@ def create_app(config_name="default"):
     from app.routes.recurring import recurring_bp
     app.register_blueprint(recurring_bp, url_prefix="/api/recurring")
 
+    from app.routes.subscriptions import subscriptions_bp
+    app.register_blueprint(subscriptions_bp, url_prefix="/api/subscriptions")
+
     @app.before_request
     def set_tenant_context():
         from flask import g

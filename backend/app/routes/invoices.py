@@ -29,6 +29,9 @@ def generate_invoice_number(user_id):
 @limiter.limit("30 per hour")
 def create_invoice():
     user, current_user_id = get_business_user_id()
+    can_create, reason = user.can_create_invoice()
+    if not can_create:
+        return jsonify({"error": reason, "upgrade_required": True}), 403
     data = request.get_json()
 
     if not data:
@@ -86,6 +89,8 @@ def create_invoice():
 
     db.session.flush()
     invoice.calculate_totals()
+    # Increment monthly invoice counter
+    user.invoice_count_this_month = (user.invoice_count_this_month or 0) + 1
     db.session.commit()
 
     return jsonify({
