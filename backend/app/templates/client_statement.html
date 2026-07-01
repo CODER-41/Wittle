@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    @page { size: A4; margin: 2cm; }
+    body {
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        color: #1f2937;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding-bottom: 20px;
+        margin-bottom: 28px;
+        border-bottom: 4px solid #2563eb;
+    }
+    .business-name { font-size: 22px; font-weight: 700; color: #111827; }
+    .business-tagline { font-size: 9px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+    .statement-title { font-size: 24px; font-weight: 700; color: #2563eb; text-align: right; }
+    .statement-sub { font-size: 11px; color: #6b7280; text-align: right; margin-top: 4px; }
+    .client-section {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 28px;
+        padding: 16px;
+        background-color: #f9fafb;
+        border-radius: 8px;
+    }
+    .section-label {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: #9ca3af;
+        margin-bottom: 6px;
+    }
+    .client-name { font-size: 15px; font-weight: 700; color: #111827; }
+    .client-detail { font-size: 11px; color: #6b7280; margin-top: 2px; }
+    .summary-cards {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 28px;
+    }
+    .summary-card {
+        flex: 1;
+        padding: 14px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+    }
+    .summary-card .label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; margin-bottom: 4px; }
+    .summary-card .value { font-size: 18px; font-weight: 700; }
+    .card-billed .value { color: #111827; }
+    .card-paid .value { color: #059669; }
+    .card-outstanding .value { color: #dc2626; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+    th {
+        background-color: #111827;
+        color: white;
+        text-align: left;
+        padding: 10px 12px;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    th:first-child { border-radius: 6px 0 0 0; }
+    th:last-child { border-radius: 0 6px 0 0; }
+    th.right, td.right { text-align: right; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; font-size: 11px; }
+    tbody tr:nth-child(even) { background-color: #f9fafb; }
+    .status-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 8px;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+    .status-draft { background-color: #f3f4f6; color: #4b5563; }
+    .status-sent { background-color: #dbeafe; color: #1d4ed8; }
+    .status-paid { background-color: #d1fae5; color: #047857; }
+    .status-overdue { background-color: #fee2e2; color: #b91c1c; }
+    .footer {
+        margin-top: 40px;
+        padding-top: 16px;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+        color: #9ca3af;
+        font-size: 9px;
+    }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <div class="business-name">{{ business_name }}</div>
+        <div class="business-tagline">Powered by Wittle</div>
+    </div>
+    <div>
+        <div class="statement-title">STATEMENT</div>
+        <div class="statement-sub">Generated {{ generated_at }}</div>
+        <div class="statement-sub">Period: {{ from_date }} to {{ to_date }}</div>
+    </div>
+</div>
+
+<div class="client-section">
+    <div>
+        <div class="section-label">Prepared For</div>
+        <div class="client-name">{{ client.name }}</div>
+        <div class="client-detail">{{ client.email or "" }}</div>
+        <div class="client-detail">{{ client.phone or "" }}</div>
+    </div>
+    <div style="text-align: right;">
+        <div class="section-label">Total Invoices</div>
+        <div style="font-size: 20px; font-weight: 700; color: #111827;">{{ invoices|length }}</div>
+    </div>
+</div>
+
+<div class="summary-cards">
+    <div class="summary-card card-billed">
+        <div class="label">Total Billed</div>
+        <div class="value">KES {{ "{:,.2f}".format(total_billed) }}</div>
+    </div>
+    <div class="summary-card card-paid">
+        <div class="label">Total Paid</div>
+        <div class="value">KES {{ "{:,.2f}".format(total_paid) }}</div>
+    </div>
+    <div class="summary-card card-outstanding">
+        <div class="label">Outstanding</div>
+        <div class="value">KES {{ "{:,.2f}".format(total_outstanding) }}</div>
+    </div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Invoice</th>
+            <th>Date</th>
+            <th>Due Date</th>
+            <th>Status</th>
+            <th class="right">Amount (KES)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for inv in invoices %}
+        <tr>
+            <td><strong>{{ inv.invoice_number }}</strong></td>
+            <td>{{ inv.created_at.strftime("%d %b %Y") }}</td>
+            <td>{{ inv.due_date.strftime("%d %b %Y") if inv.due_date else "—" }}</td>
+            <td><span class="status-badge status-{{ inv.status }}">{{ inv.status }}</span></td>
+            <td class="right"><strong>{{ "{:,.2f}".format(inv.total) }}</strong></td>
+        </tr>
+        {% endfor %}
+        {% if not invoices %}
+        <tr>
+            <td colspan="5" style="text-align: center; color: #9ca3af; padding: 24px;">
+                No invoices found for this period
+            </td>
+        </tr>
+        {% endif %}
+    </tbody>
+</table>
+
+<div class="footer">
+    Generated by Wittle — Invoicing &amp; Payments for Kenyan Businesses
+</div>
+
+</body>
+</html>

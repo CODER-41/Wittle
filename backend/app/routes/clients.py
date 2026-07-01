@@ -5,6 +5,10 @@ from app.models.client import Client
 from app.utils.permissions import get_business_user_id
 from app.utils.permissions import require_owner
 from app.services.audit_service import log_action
+from flask import send_file
+import io
+from datetime import datetime
+from app.models.invoice import Invoice
 
 clients_bp = Blueprint("clients", __name__)
 
@@ -165,3 +169,60 @@ def delete_client(client_id):
     db.session.commit()
 
     return jsonify({"message": "Client deleted successfully"}), 200
+
+@clients_bp.route("/<int:client_id>/statement", methods=["GET"])
+@jwt_required()
+def client_statement(client_id):
+    user, current_user_id = get_business_user_id()
+
+    client = Client.query.filter_by(id=client_id, user_id=current_user_id).first()
+    if not client:
+        return jsonify({"error": "Client not found"}), 404
+
+    from_date_str = request.args.get("from_date")
+    to_date_str = request.args.get("to_date")
+
+    query = Invoice.query.filter_by(client_id=client_id, user_id=current_user_id)
+
+    try:
+        if from_date_str:
+            from_date = datetime.strptime(from_date_str, "%Y-%m-%d").date()
+            query = query.filter(Invoice.created_at >= from_date_str)
+        if to_date_str:
+            to_date = datetime.strptime(to_date_str, "%Y-%m-%d").date()
+            query = query.filter(Invoice.created_at <= to_date_str + " 23:59:59")
+    except ValueError:
+        return jsonify({"error": "Dates must be in YYYY-MM-DD format"}), 400
+
+    invoices = query.order_by(Invoice.created_at.asc()).all()
+
+    total_billed = sum(float(inv.total) for inv in invoices)
+    total_paid = sum(float(inv.total) for inv in invoices if inv.status == "paid")
+    total_outstanding = total_billed - total_paid
+
+    from flask import render_template
+    from weasyprint import HTML
+
+    html_content = render_template(
+        "client_statement.html",
+        client=client,
+        business_name=user.business_name or "Your Business",
+        invoices=invoices,
+        total_billed=total_billed,
+        total_paid=total_paid,
+        total_outstanding=total_outstanding,
+        from_date=from_date_str or "All time",
+        to_date=to_date_str or datetime.utcnow().strftime("%Y-%m-%d"),
+        generated_at=datetime.utcnow().strftime("%d %B %Y"),
+    )
+
+    pdf_bytes = HTML(string=html_content).write_pdf()
+    pdf_io = io.BytesIO(pdf_bytes)
+    pdf_io.seek(0)
+
+    return send_file(
+        pdf_io,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"statement_{client.name.replace(' ', '_')}.pdf",
+    )
