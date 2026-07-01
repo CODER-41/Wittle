@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/client'
-import { Check, FileText } from 'lucide-react'
+import { Check, FileText, Zap } from 'lucide-react'
 
 const templates = [
   { id: 'classic', name: 'Classic', description: 'Blue accent, professional and clean' },
@@ -11,6 +12,7 @@ const templates = [
 
 export default function SettingsPage() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [selected, setSelected] = useState(user?.invoice_template || 'classic')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -37,6 +39,34 @@ export default function SettingsPage() {
         <p className="text-gray-500 text-sm mt-1">Customize how your invoices look</p>
       </div>
 
+      {/* Plan section */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-semibold text-gray-900">Your Plan</h2>
+            <p className="text-sm text-gray-500 mt-1 capitalize">
+              {user?.plan === 'pro' ? 'Pro — Unlimited everything' : 'Free — 5 invoices/month'}
+            </p>
+          </div>
+          {user?.plan !== 'pro' && (
+            <button
+              onClick={() => navigate('/upgrade')}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            >
+              <Zap size={14} />
+              Upgrade to Pro
+            </button>
+          )}
+          {user?.plan === 'pro' && (
+            <span className="flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full font-medium">
+              <Zap size={12} />
+              Pro
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Template section */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-gray-900">Invoice Template</h2>

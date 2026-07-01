@@ -15,6 +15,7 @@ import VatReportPage from './pages/reports/VatReportPage'
 import SettingsPage from './pages/settings/SettingsPage'
 import TeamPage from './pages/team/TeamPage'
 import ExpensesPage from './pages/expenses/ExpensesPage' 
+import UpgradePage from './pages/settings/UpgradePage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth()
@@ -81,6 +82,12 @@ export default function App() {
       <Route path="/expenses" element={
         <ProtectedRoute>
           <ExpensesPage />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/upgrade" element={
+        <ProtectedRoute>
+          <UpgradePage />
         </ProtectedRoute>
       } />
 
