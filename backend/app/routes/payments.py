@@ -73,36 +73,47 @@ def initiate_payment():
         "display_text": paystack_data.get("display_text", "")
     }), 201
 
+# Add this to the TOP of the mpesa webhook route in payments.py
+# Replace the existing /mpesa/webhook route with this:
 
 @payments_bp.route("/mpesa/webhook", methods=["POST"])
-def paystack_webhook():
-    event = request.get_json()
+def mpesa_webhook():
+    import hmac
+    import hashlib
+    import os
 
+    # Verify Paystack signature
+    signature = request.headers.get("x-paystack-signature", "")
+    body = request.get_data()
+    secret = os.getenv("PAYSTACK_SECRET_KEY", "")
+    expected = hmac.new(
+        secret.encode("utf-8"),
+        body,
+        hashlib.sha512
+    ).hexdigest()
+
+    if signature != expected:
+        return jsonify({"error": "Invalid signature"}), 400
+
+    event = request.get_json()
     if not event:
-        return jsonify({"error": "No data received"}), 400
+        return jsonify({"error": "Invalid payload"}), 400
 
     event_type = event.get("event")
     data = event.get("data", {})
-    reference = data.get("reference")
-
-    if not reference:
-        return jsonify({"error": "No reference in webhook"}), 400
-
-    payment = Payment.query.filter_by(reference=reference).first()
-    if not payment:
-        return jsonify({"error": "Payment not found"}), 404
 
     if event_type == "charge.success":
-        payment.status = "success"
-        invoice = Invoice.query.get(payment.invoice_id)
-        if invoice:
-            invoice.status = "paid"
-        db.session.commit()
-    elif event_type == "charge.failed":
-        payment.status = "failed"
-        db.session.commit()
+        reference = data.get("reference", "")
+        if reference:
+            payment = Payment.query.filter_by(reference=reference).first()
+            if payment:
+                payment.status = "success"
+                invoice = Invoice.query.get(payment.invoice_id)
+                if invoice:
+                    invoice.status = "paid"
+                db.session.commit()
 
-    return jsonify({"message": "Webhook processed"}), 200
+    return jsonify({"status": "ok"}), 200
 
 
 @payments_bp.route("/mpesa/verify/<reference>", methods=["GET"])

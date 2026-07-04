@@ -32,7 +32,8 @@ def create_app(config_name="default"):
     jwt.init_app(app)
     limiter.init_app(app)
     mail.init_app(app)
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+    CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 
     from app.routes.auth import auth_bp
     app.register_blueprint(auth_bp, url_prefix="/api/auth")

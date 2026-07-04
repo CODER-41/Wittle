@@ -12,6 +12,7 @@ from flask_mail import Message
 import secrets
 from datetime import datetime, timezone, timedelta
 
+from app.utils.validators import validate_email, sanitize_string
 auth_bp = Blueprint("auth", __name__)
 
 
@@ -30,6 +31,11 @@ def register():
 
     if not name or not email or not password:
         return jsonify({"error": "Name, email and password are required"}), 400
+    
+    if not validate_email(email):
+        return jsonify({"error": "Invalid email address"}), 400
+    name = sanitize_string(name, 100)
+    business_name = sanitize_string(business_name, 100)
 
     if len(password) < 8:
         return jsonify({"error": "Password must be at least 8 characters"}), 400
