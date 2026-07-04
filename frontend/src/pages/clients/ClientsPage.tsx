@@ -36,7 +36,10 @@ export default function ClientsPage() {
       setForm({ name: '', email: '', phone: '', address: '' })
       setShowForm(false)
       fetchClients(search)
-    } catch (err: any) {
+
+
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      
       setError(err.response?.data?.error || 'Failed to create client')
     } finally {
       setSaving(false)

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import api from '../../api/client'
 import { Client } from '../../types'
 import { Plus, Trash2, RefreshCw, Pause, Play } from 'lucide-react'
@@ -18,7 +17,6 @@ interface RecurringInvoice {
 }
 
 export default function RecurringPage() {
-  const navigate = useNavigate()
   const [recurring, setRecurring] = useState<RecurringInvoice[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
@@ -67,6 +65,7 @@ export default function RecurringPage() {
       setForm({ client_id: '', frequency: 'monthly', start_date: new Date().toISOString().split('T')[0], description: '', unit_price: '', notes: '' })
       setShowForm(false)
       fetchRecurring()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any 
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create recurring invoice')
     } finally {
@@ -78,8 +77,9 @@ export default function RecurringPage() {
     try {
       await api.patch(`/recurring/${r.id}`, { is_active: !r.is_active })
       fetchRecurring()
-    } catch (err) {
-      console.error(err)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Something went wrong')
     }
   }
 
@@ -88,8 +88,10 @@ export default function RecurringPage() {
     try {
       await api.delete(`/recurring/${id}`)
       fetchRecurring()
-    } catch (err) {
-      console.error(err)
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Something went wrong')
     }
   }
 

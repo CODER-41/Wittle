@@ -7,6 +7,10 @@ export interface User {
   owner_id: number | null
   is_active: boolean
   created_at: string
+  invoice_template: string
+  plan: "free" | "pro"
+  plan_status: string
+  kra_pin: string | null
 }
 
 export interface Client {

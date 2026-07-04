@@ -1,5 +1,5 @@
 import { ReactNode, useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
   LayoutDashboard,
@@ -11,9 +11,8 @@ import {
   Menu,
   X,
   Receipt,
-  Settings as SettingsIcon,
   TrendingDown,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react'
 
 const navItems = [
@@ -23,10 +22,9 @@ const navItems = [
   { to: '/payments', icon: CreditCard, label: 'Payments' },
   { to: '/team', icon: Settings, label: 'Team' },
   { to: '/vat-report', icon: Receipt, label: 'VAT Report' },
-  { to: '/settings', icon: SettingsIcon, label: 'Settings' },
+  { to: '/settings', icon: Settings, label: 'Settings' },
   { to: '/expenses', icon: TrendingDown, label: 'Expenses' },
   { to: '/recurring', icon: RefreshCw, label: 'Recurring' },
-
 ]
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -35,7 +33,6 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
@@ -60,6 +57,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
           <button
             onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
             className="lg:hidden p-1 text-gray-400 hover:text-gray-600"
           >
             <X size={20} />
@@ -74,7 +72,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               to={to}
               end={to === '/'}
               onClick={() => setMobileOpen(false)}
-              className={({ isActive }) =>
+              className={({ isActive }: { isActive: boolean }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-blue-50 text-blue-700'
@@ -103,6 +101,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
           <button
             onClick={logout}
+            aria-label="Sign out"
             className="flex items-center gap-2 text-sm text-gray-500 hover:text-red-600 transition-colors w-full px-2 py-1.5 rounded-lg hover:bg-red-50"
           >
             <LogOut size={16} />
@@ -117,6 +116,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200">
           <button
             onClick={() => setMobileOpen(true)}
+            aria-label="Open menu"
             className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
           >
             <Menu size={20} />
