@@ -13,6 +13,7 @@ import {
   Receipt,
   Settings as SettingsIcon,
   TrendingDown,
+  RefreshCw
 } from 'lucide-react'
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
   { to: '/vat-report', icon: Receipt, label: 'VAT Report' },
   { to: '/settings', icon: SettingsIcon, label: 'Settings' },
   { to: '/expenses', icon: TrendingDown, label: 'Expenses' },
+  { to: '/recurring', icon: RefreshCw, label: 'Recurring' },
 
 ]
 

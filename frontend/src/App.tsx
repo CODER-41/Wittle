@@ -16,6 +16,8 @@ import SettingsPage from './pages/settings/SettingsPage'
 import TeamPage from './pages/team/TeamPage'
 import ExpensesPage from './pages/expenses/ExpensesPage' 
 import UpgradePage from './pages/settings/UpgradePage'
+import RecurringPage from './pages/recurring/RecurringPage'
+
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth()
@@ -88,6 +90,12 @@ export default function App() {
       <Route path="/upgrade" element={
         <ProtectedRoute>
           <UpgradePage />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/recurring" element={
+        <ProtectedRoute>
+          <RecurringPage />
         </ProtectedRoute>
       } />
 

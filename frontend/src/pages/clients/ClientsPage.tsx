@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import api from '../../api/client'
 import { Client } from '../../types'
-import { Plus, Search, Mail, Phone } from 'lucide-react'
+import { Plus, Search, Mail, Phone, FileText } from 'lucide-react'
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([])
@@ -11,6 +11,7 @@ export default function ClientsPage() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', address: '' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [downloadingId, setDownloadingId] = useState<number | null>(null)
 
   const fetchClients = (q = '') => {
     api.get(`/clients/?search=${q}&per_page=20`)
@@ -42,12 +43,33 @@ export default function ClientsPage() {
     }
   }
 
+  const handleDownloadStatement = async (client: Client) => {
+    setDownloadingId(client.id)
+    try {
+      const year = new Date().getFullYear()
+      const res = await api.get(
+        `/clients/${client.id}/statement?from_date=${year}-01-01&to_date=${year}-12-31`,
+        { responseType: 'blob' }
+      )
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `statement_${client.name.replace(/\s+/g, '_')}.pdf`
+      a.click()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setDownloadingId(null)
+    }
+  }
+
   return (
     <div className="p-4 sm:p-8 max-w-5xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Clients</h1>
           <p className="text-gray-500 text-sm mt-1">{clients.length} total</p>
         </div>
         <button
@@ -68,7 +90,7 @@ export default function ClientsPage() {
               {error}
             </div>
           )}
-          <form onSubmit={handleCreate} className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
               <input
@@ -110,7 +132,7 @@ export default function ClientsPage() {
                 placeholder="Nairobi, Kenya"
               />
             </div>
-            <div className="col-span-2 flex gap-3 justify-end">
+            <div className="col-span-1 sm:col-span-2 flex gap-3 justify-end">
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
@@ -155,15 +177,15 @@ export default function ClientsPage() {
         ) : (
           clients.map(client => (
             <div key={client.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
                   <span className="text-purple-700 text-sm font-semibold">
                     {client.name.charAt(0).toUpperCase()}
                   </span>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{client.name}</p>
-                  <div className="flex items-center gap-3 mt-0.5">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{client.name}</p>
+                  <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                     {client.email && (
                       <span className="flex items-center gap-1 text-xs text-gray-400">
                         <Mail size={11} /> {client.email}
@@ -177,6 +199,18 @@ export default function ClientsPage() {
                   </div>
                 </div>
               </div>
+
+              <button
+                onClick={() => handleDownloadStatement(client)}
+                disabled={downloadingId === client.id}
+                title="Download statement"
+                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-blue-200 transition-colors disabled:opacity-40 shrink-0 ml-3"
+              >
+                <FileText size={13} />
+                <span className="hidden sm:inline">
+                  {downloadingId === client.id ? 'Downloading...' : 'Statement'}
+                </span>
+              </button>
             </div>
           ))
         )}
