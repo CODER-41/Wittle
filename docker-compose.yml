@@ -1,0 +1,97 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: wittle_db
+      POSTGRES_USER: wittle_user
+      POSTGRES_PASSWORD: wittle2024
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wittle_user -d wittle_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://wittle_user:wittle2024@postgres:5432/wittle_db
+      REDIS_URL: redis://redis:6379/0
+      ALLOWED_ORIGINS: http://localhost:3000,http://frontend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - pdf_storage:/tmp/wittle_pdfs
+      - wittle_logs:/var/log/wittle
+    ports:
+      - "5000:5000"
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    command: celery -A app.celery_app.celery_app worker --loglevel=info
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://wittle_user:wittle2024@postgres:5432/wittle_db
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - pdf_storage:/tmp/wittle_pdfs
+
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    command: celery -A app.celery_app.celery_app beat --loglevel=info
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://wittle_user:wittle2024@postgres:5432/wittle_db
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
+  pdf_storage:
+  wittle_logs:

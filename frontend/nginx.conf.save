@@ -1,0 +1,20 @@
+erver {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Cache hashed static assets aggressively (Vite adds content hashes to filenames)
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # This is the important line for React Router:
+    # any URL that isn't a real file (e.g. /invoices/42) falls back to
+    # index.html so the client-side router can handle it. Without this,
+    # refreshing on a deep link returns nginx's 404 page instead of your app.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
