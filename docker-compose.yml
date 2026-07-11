@@ -35,6 +35,9 @@ services:
       DATABASE_URL: postgresql://wittle_user:wittle2024@postgres:5432/wittle_db
       REDIS_URL: redis://redis:6379/0
       ALLOWED_ORIGINS: http://localhost:3000,http://frontend
+      DB_HOST: postgres
+      DB_USER: wittle_user
+      DB_NAME: wittle_db
     depends_on:
       postgres:
         condition: service_healthy
@@ -51,6 +54,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: always
+    entrypoint: []
     command: celery -A app.celery_app.celery_app worker --loglevel=info
     env_file: ./backend/.env
     environment:
@@ -69,6 +73,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: always
+    entrypoint: []
     command: celery -A app.celery_app.celery_app beat --loglevel=info
     env_file: ./backend/.env
     environment:
